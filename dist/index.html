@@ -245,7 +245,7 @@ vec3 dustGround(vec2 p, float talus) {
   vec3 farc = mix(rgb(12.0, 18.0, 28.0), rgb(36.0, 44.0, 62.0), smoothstep(0.38, 0.72, big * 0.5 + mid * 0.6));
   farc = mix(farc, rgb(76.0, 86.0, 106.0), topLit * 0.4);
   farc = mix(farc, rgb(10.0, 14.0, 22.0), under * 0.5);
-  return mix(farc, lit, talus);
+  return mix(farc * 0.8, lit, talus);
 }
 
 vec3 groundColor(vec2 p, float hz) {
@@ -260,7 +260,7 @@ vec3 groundColor(vec2 p, float hz) {
   float s = s1 * 0.7 + s2 * 0.4 - 0.55;
   float dist = p.y - yb;
   // below the edge: red with a few pale streaks; above: pale with red streaks that thin out uphill
-  float k = dist / 18.0 - s * 3.0 - (fbm(p * 0.04 + 61.0, 3) - 0.5) * 1.5;
+  float k = dist / 18.0 - s * 3.0 - (fbm(p * vec2(0.012, 0.06) + 61.0, 3) - 0.5) * 1.2;
   float redAmt = smoothstep(-0.2, 0.2, k);
   float up = smoothstep(-110.0, -5.0, dist) * talus;
   float sn = fbm(vec2(p.x * 0.011, p.y * 0.07) + 101.0, 5) * 0.8 + fbm(p * 0.05 + 7.0, 3) * 0.3;
@@ -382,7 +382,7 @@ vec3 cliffLit(vec2 p, float topY, float baseY, float seed) {
   float crev = (1.0 - smoothstep(0.0, 0.1, fu)) * step(0.4, hash12(vec2(col, seed + 5.0))) * smoothstep(0.2, 0.6, fbm(vec2(p.x * 0.02, p.y * 0.015) + seed, 3));
   c = mix(c, rgb(6.0, 12.0, 22.0), crev * 0.9);
   // bulging rounded highlights
-  c = mix(c, rgb(84.0, 120.0, 154.0), smoothstep(0.58, 0.78, fbm(p * vec2(0.035, 0.022) + seed + 9.0, 4)) * 0.55);
+  c = mix(c, rgb(96.0, 132.0, 166.0), smoothstep(0.55, 0.75, fbm(p * vec2(0.035, 0.022) + seed + 9.0, 4)) * 0.65);
   c = mix(c, rgb(18.0, 34.0, 54.0), smoothstep(0.62, 0.8, fbm(p * vec2(0.03, 0.012) + seed + 19.0, 4)) * 0.5);
   // long dark streaks
   float run = smoothstep(0.84, 0.97, ridged(vec2(p.x * 0.08, p.y * 0.004) + seed, 3));

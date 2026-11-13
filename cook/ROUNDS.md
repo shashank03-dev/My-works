@@ -72,3 +72,11 @@ Measured r15: SSIM grey 0.668, SSIM rgb 0.616 (quarter res), 1-MAE at 1/16 res 9
 Critics r15 (2, same model, fresh context), eyeballed: A comp 70 light 52 color 60 mat 35 detail 30; B comp 72 light 55 color 62 mat 38 detail 35. Median: comp 71, light 54, color 61, materials 37, detail 33. Both picked the render as the code-made one.
 Top gaps: outcrop reads as masonry (needs warm brown, irregular, gritty); cliffs look tiled with flat shadow faces; talus has hard horizontal red strips; plain too empty (needs 5-10x scatter, left rock cluster); distant valley with hills missing; clouds lack form.
 Stop check: bar no | floor n/a (capped) | stills approved no | final no -> next round.
+
+## Rounds 17-23
+Time: 11:02 to 11:12.
+Changes: warm, gritty outcrop with broken joints; slope-limited red streaks on the talus; denser pebbles; layered distant ridges; horizon haze; darker far ground; pale dust tongue; talus values pulled back after overshoot (grid error 39 -> 2); fluted cliff faces with bounce on the shadow sides.
+Measured r23 (64-sample final, output/red-plain.png): SSIM grey 0.658, SSIM rgb 0.628, quarter-res SSIM 0.618, 1-MAE 95.3% full res (inflated by the black sky). Render time: 214 s for 64 samples at 2000x1333 on CPU SwiftShader.
+Critics r23 (2, fresh context, eyeballed): C comp 62 light 55 color 60 mat 35 detail 30; D comp 72 light 70 color 74 mat 55 detail 52. Median: comp 67, light 63, color 67, materials 45, detail 41.
+Top gaps still open: mesa surfaces read as textured slabs (no real strata, ledges or crenellated tops); the middle distance reads as one continuous blue-grey band instead of two talus fans with a dark receding plain; the outcrop is too symmetric and tiled; the red field lacks fine grain and depth-graded clumps.
+Stop check: bar NO (far below 99) | floor n/a | stills approved no | final not approved -> stopped at session cap, reported plainly.
