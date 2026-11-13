@@ -1,0 +1,15 @@
+ssim_grey: 0.6544
+ssim_rgb: 0.6243
+ssim_rgb_q: 0.6178
+mae: 0.0487
+mae_16: 0.0364
+similarity_pct_full: 95.1346
+similarity_pct_16: 96.3621
+reg_sky: ref [3, 5, 9] ren [2, 5, 8] mae 2.8
+reg_lmesa: ref [29, 48, 67] ren [32, 51, 70] mae 16.8
+reg_rmesa: ref [29, 46, 63] ren [30, 46, 64] mae 15.5
+reg_horizon: ref [25, 30, 41] ren [28, 33, 45] mae 11.5
+reg_plain_L: ref [107, 34, 38] ren [110, 28, 31] mae 24.0
+reg_plain_R: ref [135, 31, 29] ren [130, 24, 23] mae 19.6
+reg_outcrop: ref [75, 45, 43] ren [69, 39, 37] mae 37.7
+reg_figure: ref [49, 24, 30] ren [43, 21, 31] mae 19.9

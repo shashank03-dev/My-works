@@ -58,3 +58,17 @@ Top gaps from critics:
 Progress note sent: [time]
 Stop check: bar [no] | floor [no] | stills approved [no] | final checked [no] -> [next round / ship / stop at cap]
 Next focus: [ ]
+
+## Decisions (run log)
+- 10:24 Intake skipped: prompt already sets target (1:1 recreation), bar (99%), assets (all from scratch) and leaves method to me. Defaults applied, logged in BRIEF.md.
+- 10:30 Stack: one HTML page with a WebGL2 fragment shader, rendered offline in headless Chromium with jittered supersampling. Painted 2D scene, not 3D, because the target is a single fixed painting.
+- 10:35 Outlines (skyline, outcrop edge, figure, stone layout) measured from the reference and stored as numbers in code. No reference pixels are embedded anywhere.
+- 10:40 Similarity is measured with SSIM and 1-MAE. 1-MAE is inflated by the large black sky, so SSIM is the honest number.
+
+## Rounds 00-16 (compressed)
+Time: 10:24 to 11:02. Rounds were short (render takes ~13 s at 8 samples).
+- r00 blockout. r01-04 ground, talus, cliffs, stones, shaded slope. r05-10 outcrop rewritten four times (draped bands, then horizontal tiers, then box slabs). r11-13 heatmap-guided value fixes (duller edge band, outcrop light map). r14-15 figure folds, pebbles. r16 sky cumulus.
+Measured r15: SSIM grey 0.668, SSIM rgb 0.616 (quarter res), 1-MAE at 1/16 res 96.6%.
+Critics r15 (2, same model, fresh context), eyeballed: A comp 70 light 52 color 60 mat 35 detail 30; B comp 72 light 55 color 62 mat 38 detail 35. Median: comp 71, light 54, color 61, materials 37, detail 33. Both picked the render as the code-made one.
+Top gaps: outcrop reads as masonry (needs warm brown, irregular, gritty); cliffs look tiled with flat shadow faces; talus has hard horizontal red strips; plain too empty (needs 5-10x scatter, left rock cluster); distant valley with hills missing; clouds lack form.
+Stop check: bar no | floor n/a (capped) | stills approved no | final no -> next round.

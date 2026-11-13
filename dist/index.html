@@ -140,21 +140,30 @@ vec3 sky(vec2 p) {
   float n2 = fbm(p * vec2(0.012, 0.02) + vec2(11.0, 2.0), 5);
   float cl = smoothstep(0.42, 0.75, n1 * 0.75 + n2 * 0.35);
   c += rgb(1.0, 2.6, 4.6) * cl * smoothstep(150.0, 400.0, p.y);
-  // brighter blue cloud banks at the left and right edges
-  float left = exp(-pow((p.x - 20.0) / 190.0, 2.0)) * smoothstep(250.0, 380.0, p.y) * (1.0 - smoothstep(560.0, 700.0, p.y));
-  float right = exp(-pow((p.x - 1985.0) / 200.0, 2.0)) * smoothstep(200.0, 300.0, p.y) * (1.0 - smoothstep(430.0, 520.0, p.y));
-  float puff = fbm(p * 0.011 + vec2(5.0, 1.0), 6);
-  float puff2 = fbm(p * 0.03 + vec2(1.0, 7.0), 4);
-  float pc = smoothstep(0.38, 0.72, puff * 0.8 + puff2 * 0.3);
-  c += rgb(6.0, 11.0, 22.0) * pc * left * 1.3;
-  c += rgb(3.0, 9.0, 20.0) * pc * right * 1.2;
-  // low warm-grey cloud bank above the horizon
-  float lowBand = smoothstep(640.0, 760.0, p.y) * (1.0 - smoothstep(870.0, 935.0, p.y));
-  float streak = fbm(p * vec2(0.006, 0.026) + vec2(2.0, 4.0), 6);
-  float streak2 = fbm(p * vec2(0.02, 0.06) + vec2(9.0, 3.0), 4);
-  float lb = smoothstep(0.45, 0.8, streak * 0.8 + streak2 * 0.35);
-  c += rgb(22.0, 18.0, 19.0) * lb * lowBand;
-  c += rgb(4.0, 5.0, 6.0) * lowBand * 0.8;
+  // billowy cloud banks at the left and right edges
+  float left = smoothstep(260.0, 0.0, p.x) * smoothstep(250.0, 330.0, p.y) * (1.0 - smoothstep(600.0, 700.0, p.y));
+  left = max(left, smoothstep(330.0, 0.0, p.x) * smoothstep(560.0, 640.0, p.y) * (1.0 - smoothstep(860.0, 940.0, p.y)) * 0.7);
+  float right = smoothstep(1720.0, 1960.0, p.x) * smoothstep(190.0, 260.0, p.y) * (1.0 - smoothstep(420.0, 520.0, p.y));
+  vec2 wq = p * 0.006 + vec2(fbm(p * 0.004 + 3.0, 4), fbm(p * 0.004 + 8.0, 4)) * 1.6;
+  float bill = fbm(wq + vec2(5.0, 1.0), 6);
+  float billUp = fbm(wq + vec2(5.0, 1.0) + vec2(0.0, -0.05), 6);
+  float dens = smoothstep(0.45, 0.62, bill);
+  float edgeLit = clamp((bill - billUp) * 18.0, 0.0, 1.0);
+  c += (rgb(4.0, 7.0, 15.0) + rgb(7.0, 11.0, 20.0) * edgeLit) * dens * left;
+  c += (rgb(2.0, 5.0, 12.0) + rgb(4.0, 8.0, 16.0) * edgeLit) * dens * right;
+  // low cumulus band above the horizon: warm, lit on the edges, dark underneath
+  float lowBand = smoothstep(650.0, 720.0, p.y) * (1.0 - smoothstep(850.0, 920.0, p.y));
+  vec2 lq = vec2(p.x * 0.0055, p.y * 0.012) + vec2(fbm(p * vec2(0.003, 0.008) + 21.0, 4), fbm(p * vec2(0.003, 0.008) + 27.0, 4)) * 1.4;
+  float cu = fbm(lq + 2.0, 6);
+  float cuUp = fbm(lq + 2.0 + vec2(0.0, -0.06), 6);
+  float cd = smoothstep(0.47, 0.6, cu) * lowBand;
+  float rim = clamp((cu - cuUp) * 14.0, 0.0, 1.0);
+  c = mix(c, rgb(9.0, 9.0, 12.0), cd * 0.6);
+  c += rgb(6.0, 6.0, 7.0) * lowBand * smoothstep(0.35, 0.6, cu);
+  c += rgb(22.0, 15.0, 17.0) * cd * (0.25 + rim) * smoothstep(300.0, 600.0, p.x);
+  c += rgb(12.0, 9.0, 11.0) * cd * (0.25 + rim) * (1.0 - smoothstep(300.0, 600.0, p.x));
+  // hazy light above the horizon between the mesas
+  c += rgb(15.0, 15.0, 18.0) * smoothstep(800.0, 915.0, p.y) * smoothstep(380.0, 600.0, p.x) * (1.0 - smoothstep(1450.0, 1600.0, p.x));
   // haze glow on the horizon
   c += rgb(6.0, 7.0, 10.0) * exp(-pow((p.y - 925.0) / 35.0, 2.0));
   // stars: sparse, tiny, mostly very faint
@@ -194,9 +203,12 @@ vec3 redSoil(vec2 p) {
   red = mix(red, rgb(112.0, 13.0, 11.0), smoothstep(0.6, 0.78, fr) * 0.6);
   float fr2 = fbm(vec2(p.x * 0.02, p.y * 0.16) + 19.0, 4);
   red = mix(red, rgb(125.0, 18.0, 16.0), smoothstep(0.62, 0.8, fr2) * 0.45);
+  // fine dark speckle and crust
+  float sp = hash12(floor(p / 2.0));
+  red *= 0.88 + 0.24 * vnoise(p * vec2(0.08, 0.25));
   // shadowed band on the far left
-  float lshade = (1.0 - smoothstep(150.0, 420.0, p.x)) * exp(-pow((p.y - 1030.0) / 45.0, 2.0));
-  red = mix(red, rgb(70.0, 12.0, 14.0), lshade * 0.65);
+  float lshade = (1.0 - smoothstep(200.0, 480.0, p.x)) * exp(-pow((p.y - 1045.0) / 55.0, 2.0));
+  red = mix(red, rgb(52.0, 10.0, 12.0), lshade * (0.55 + 0.35 * fbm(p * vec2(0.01, 0.04) + 3.0, 4)));
   // a softer darker band hugging the blue edge
   float edgeShade = exp(-pow((p.y - blueEdge(p.x) - 14.0) / 26.0, 2.0));
   red = mix(red, rgb(92.0, 22.0, 30.0), edgeShade * 0.65);
@@ -224,11 +236,13 @@ vec3 dustGround(vec2 p, float talus) {
   float under = smoothstep(0.6, 0.95, fr) * plate;
   float big = fbm(vec2(p.x * 0.006, p.y * 0.025) + 87.0, 5);
   float mid = fbm(vec2(p.x * 0.02, p.y * 0.08) + 83.0, 4);
-  vec3 lit = mix(rgb(40.0, 64.0, 96.0), rgb(78.0, 104.0, 136.0), smoothstep(0.3, 0.7, big * 0.6 + mid * 0.5));
+  vec3 lit = mix(rgb(34.0, 58.0, 88.0), rgb(84.0, 108.0, 138.0), smoothstep(0.3, 0.7, big * 0.6 + mid * 0.5));
+  // darker right under the cliffs, brighter where the slope opens out
+  lit *= mix(0.75, 1.1, smoothstep(860.0, 960.0, p.y + (p.x > 900.0 ? 60.0 : 0.0)));
   lit = mix(lit, rgb(122.0, 138.0, 160.0), topLit * (0.35 + 0.5 * pid) * smoothstep(0.35, 0.6, mid + 0.1));
   lit = mix(lit, rgb(14.0, 22.0, 36.0), under * 0.55);
   lit = mix(lit, rgb(18.0, 28.0, 44.0), smoothstep(0.6, 0.78, fbm(vec2(p.x * 0.012, p.y * 0.05) + 89.0, 4)) * 0.6);
-  vec3 farc = mix(rgb(18.0, 24.0, 36.0), rgb(54.0, 64.0, 86.0), smoothstep(0.38, 0.72, big * 0.5 + mid * 0.6));
+  vec3 farc = mix(rgb(12.0, 18.0, 28.0), rgb(36.0, 44.0, 62.0), smoothstep(0.38, 0.72, big * 0.5 + mid * 0.6));
   farc = mix(farc, rgb(76.0, 86.0, 106.0), topLit * 0.4);
   farc = mix(farc, rgb(10.0, 14.0, 22.0), under * 0.5);
   return mix(farc, lit, talus);
@@ -246,28 +260,41 @@ vec3 groundColor(vec2 p, float hz) {
   float s = s1 * 0.7 + s2 * 0.4 - 0.55;
   float dist = p.y - yb;
   // below the edge: red with a few pale streaks; above: pale with red streaks that thin out uphill
-  float k = dist / 18.0 - s * 3.0;
+  float k = dist / 18.0 - s * 3.0 - (fbm(p * 0.04 + 61.0, 3) - 0.5) * 1.5;
   float redAmt = smoothstep(-0.2, 0.2, k);
   float up = smoothstep(-110.0, -5.0, dist) * talus;
-  float sn = fbm(vec2(p.x * 0.004, p.y * 0.14) + 101.0, 5);
-  float streak = smoothstep(0.74 - 0.2 * up, 0.8 - 0.2 * up, sn) * smoothstep(0.15, 0.6, up);
+  float sn = fbm(vec2(p.x * 0.011, p.y * 0.07) + 101.0, 5) * 0.8 + fbm(p * 0.05 + 7.0, 3) * 0.3;
+  float streak = smoothstep(0.76 - 0.12 * up, 0.86 - 0.12 * up, sn) * smoothstep(0.35, 0.8, up);
   redAmt = max(redAmt, streak);
   // pale streaks reaching out over the red, mostly right of centre
   float reach = smoothstep(650.0, 1000.0, p.x) * (1.0 - smoothstep(1550.0, 1750.0, p.x)) * exp(-max(dist, 0.0) / 32.0) * step(0.0, dist);
   float ps = fbm(vec2(p.x * 0.0035, p.y * 0.2) + 131.0, 5);
   redAmt = min(redAmt, 1.0 - smoothstep(0.6, 0.66, ps + reach * 0.22) * reach);
-  return mix(dusty, red * mix(0.75, 1.0, redAmt), redAmt);
+  vec3 c = mix(dusty, red * mix(0.75, 1.0, redAmt), redAmt);
+  // bright pale-blue tongue of dust reaching from the right slope towards the centre
+  float tg = smoothstep(1050.0, 1200.0, p.x) * (1.0 - smoothstep(1480.0, 1600.0, p.x)) * smoothstep(-40.0, -20.0, dist) * (1.0 - smoothstep(-6.0, 4.0, dist));
+  float tgn = smoothstep(0.42, 0.6, fbm(vec2(p.x * 0.006, p.y * 0.08) + 141.0, 5));
+  c = mix(c, mix(rgb(56.0, 92.0, 132.0), rgb(78.0, 108.0, 146.0), fbm(p * 0.05, 3)), tg * tgn);
+  return c;
 }
 
 // distant ridges between the mesas
 vec3 farHills(vec2 p, vec3 base, float hz) {
-  float center = smoothstep(420.0, 560.0, p.x) * (1.0 - smoothstep(1380.0, 1470.0, p.x));
-  float t = clamp((p.y - hz) / 22.0, 0.0, 1.0);
-  float ridge = ridged(vec2(p.x * 0.012, p.y * 0.06), 5);
-  vec3 c = mix(rgb(34.0, 42.0, 58.0), rgb(18.0, 24.0, 36.0), t);
-  c = mix(c, rgb(66.0, 76.0, 96.0), smoothstep(0.72, 0.92, ridge) * (1.0 - t) * 0.7);
-  float w = center * (1.0 - smoothstep(hz + 8.0, hz + 30.0, p.y));
-  return mix(base, c, w);
+  float center = smoothstep(420.0, 560.0, p.x) * (1.0 - smoothstep(1400.0, 1480.0, p.x));
+  vec3 c = base;
+  // three receding ridges, each a silhouette with a pale lit crest and darker flank
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    float ry = hz + 4.0 + fi * 9.0 + (fbm(vec2(p.x * (0.004 + fi * 0.002), fi * 7.0), 4) - 0.5) * (18.0 - fi * 4.0);
+    if (i == 0) ry = hz;
+    float inside = smoothstep(ry - 0.8, ry + 0.8, p.y);
+    float crest = exp(-(p.y - ry) / (3.0 + fi)) * inside;
+    vec3 flank = mix(rgb(30.0, 38.0, 54.0), rgb(16.0, 22.0, 34.0), clamp((p.y - ry) / 20.0, 0.0, 1.0));
+    flank = mix(flank, rgb(62.0, 72.0, 94.0), crest * smoothstep(0.45, 0.7, fbm(vec2(p.x * 0.02, fi), 3)) * 0.8);
+    float w = center * inside * (1.0 - smoothstep(ry + 10.0, ry + 30.0, p.y)) * (i == 0 ? 1.0 : 0.85);
+    c = mix(c, flank, w * (1.0 - smoothstep(925.0, 960.0, p.y)));
+  }
+  return c;
 }
 
 // ---------------------------------------------------------------- stones on the plain
@@ -317,7 +344,7 @@ vec3 stones(vec2 p, vec3 c) {
   for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
     vec2 id = ci + vec2(x, y);
     float h = hash12(id * 1.37 + 0.5);
-    if (h > 0.5) continue;
+    if (h > 0.78) continue;
     vec2 cc = (id + hash22(id + 2.1)) * cell;
     float sz = (0.8 + 3.2 * pow(hash12(id + 5.3), 3.0)) * scale + 0.45;
     vec3 before = c;
@@ -348,7 +375,9 @@ vec3 cliffLit(vec2 p, float topY, float baseY, float seed) {
   float loR = smoothstep(0.78, 1.0, fu);
   float loB = smoothstep(0.85, 1.0, fv);
   c = mix(c, rgb(88.0, 124.0, 158.0), max(hiL * 0.45, hiT * 0.3) * (0.3 + 0.7 * nf) * step(0.3, id));
-  c = mix(c, rgb(14.0, 26.0, 42.0), max(loR * 0.55, loB * 0.35) * (0.6 + 0.4 * nf));
+  c = mix(c, rgb(14.0, 26.0, 42.0), max(loR * 0.5, loB * 0.2) * (0.6 + 0.4 * nf));
+  float flute = ridged(vec2(p.x * 0.11, p.y * 0.008) + seed * 2.0, 4);
+  c *= 0.75 + 0.45 * flute;
   // deep crevices between some columns
   float crev = (1.0 - smoothstep(0.0, 0.1, fu)) * step(0.4, hash12(vec2(col, seed + 5.0))) * smoothstep(0.2, 0.6, fbm(vec2(p.x * 0.02, p.y * 0.015) + seed, 3));
   c = mix(c, rgb(6.0, 12.0, 22.0), crev * 0.9);
@@ -372,6 +401,9 @@ vec3 cliffShadow(vec2 p, float topY, float baseY, float seed) {
   float st2 = fbm(vec2(p.x * 0.05, p.y * 0.03) + seed + 3.0, 4);
   vec3 c = mix(rgb(10.0, 7.0, 8.0), rgb(34.0, 24.0, 23.0), clamp(st * 0.9 + st2 * 0.35 - 0.1, 0.0, 1.0));
   c = mix(c, rgb(48.0, 34.0, 31.0), smoothstep(0.68, 0.9, st) * 0.6);
+  float fl = ridged(vec2(p.x * 0.09, p.y * 0.01) + seed, 4);
+  c *= 0.6 + 0.7 * fl;
+  c += rgb(14.0, 8.0, 10.0) * smoothstep(0.7, 1.0, rel);  // faint red bounce low on the face
   c *= mix(1.0, 0.3, smoothstep(0.45, 1.0, rel));
   c += rgb(30.0, 26.0, 30.0) * exp(-(p.y - topY) / 3.0) * 0.6;
   return c;
@@ -381,7 +413,7 @@ vec3 cliffShadow(vec2 p, float topY, float baseY, float seed) {
 // one stone block in a row of slabs, seen from slightly above: top, bright lip, face, shadow
 vec3 slabRow(vec2 p, float t, float rowH, float row, float f, out float gapOut) {
   float persp = pow(1.16, row) * 24.0 / 26.0;   // constant within a row so joints stay vertical
-  float bw = (52.0 + 70.0 * hash12(vec2(row, 3.0))) * persp;
+  float bw = (40.0 + 90.0 * hash12(vec2(row, 3.0))) * persp;
   float u0 = p.x / bw + hash12(vec2(row, 1.0)) * 10.0;
   // irregular block widths (monotonic warp) and ragged joints
   float u = u0 + 0.42 * (vnoise(vec2(u0 * 0.9, row * 13.0)) - 0.5) * 2.0 * 0.5;
@@ -391,7 +423,7 @@ vec3 slabRow(vec2 p, float t, float rowH, float row, float f, out float gapOut) 
   float id2 = hash12(vec2(cell, row + 23.0));
   float id3 = hash12(vec2(cell, row + 37.0));
   // each block sits at its own height
-  float off = (id2 - 0.5) * 0.45 + (vnoise(vec2(p.x * 0.06, row * 3.0)) - 0.5) * 0.14;
+  float off = (id2 - 0.5) * 0.8 + (vnoise(vec2(p.x * 0.06, row * 3.0)) - 0.5) * 0.25;
   float g = f + off + (vnoise(p * vec2(0.12, 0.3)) - 0.5) * 0.1;
   float topEnd = 0.38 + 0.2 * id;           // top face, then the front face, then the shadow under the block
   float faceEnd = topEnd + 0.32 + 0.12 * id3;
@@ -410,17 +442,22 @@ vec3 slabRow(vec2 p, float t, float rowH, float row, float f, out float gapOut) 
   float stri = ridged(vec2(p.x * 0.16 / persp, p.y * 0.02) + id * 4.0, 4);
   vec3 faceC = mix(rgb(22.0, 19.0, 18.0), mix(rgb(92.0, 84.0, 80.0), rgb(150.0, 140.0, 134.0), exp(-pow((p.x - 1080.0) / 260.0, 2.0))), stri * (1.0 - ff * 0.75));
   vec3 c = g < topEnd ? topC : (g < faceEnd ? faceC : rgb(5.0, 4.0, 4.0));
-  c = mix(c, rgb(178.0, 176.0, 184.0), lip * 0.55);
+  c = mix(c, rgb(170.0, 166.0, 168.0), lip * 0.35 * step(0.4, vnoise(vec2(p.x * 0.08, row))));
   // revealed block of the row behind (g < 0) and the hidden part under the next row (g > 1)
   if (g < 0.0) c = faceC * 0.6;
   if (g > 1.0) c = rgb(4.0, 3.0, 3.0);
   // dark joints between blocks, softly shadowed on their left side
   float joint = min(fu, 1.0 - fu) * bw;
-  float gap = 1.0 - smoothstep(2.0, 5.0, joint);
+  float gap = (1.0 - smoothstep(1.5, 4.5 + 3.0 * id, joint)) * step(0.25, hash12(vec2(cell, row + 51.0)));
   c = mix(c, rgb(4.0, 3.0, 3.0), gap);
   c *= mix(0.55, 1.0, smoothstep(0.0, 10.0, fu * bw));
   // some blocks are dull and dark
   c *= mix(1.0, 0.5, step(0.72, id3)) * (0.8 + 0.35 * id);
+  // warm brown-ochre staining and grit
+  float warm = smoothstep(0.4, 0.7, fbm(p * vec2(0.012, 0.025) + 151.0, 4));
+  c = mix(c, c * rgb(300.0, 240.0, 190.0) * 0.95, warm * 0.6);
+  float gr = vnoise(p * 0.9) * vnoise(p * 0.37 + 4.0);
+  c *= 0.8 + 0.45 * gr;
   // brown grit collects in the joints lower down
   vec3 grit = mix(rgb(30.0, 22.0, 18.0), rgb(78.0, 58.0, 44.0), vnoise(p * 0.4));
   c = mix(c, grit, gap * smoothstep(1180.0, 1260.0, p.y) * 0.6);
@@ -524,7 +561,7 @@ vec3 scene(vec2 p) {
         if (p.x <= split) c += rgb(40.0, 52.0, 64.0) * exp(-(p.y - hz) / 2.0) * 0.7;
       } else if (p.x > split - 10.0) {
         // the slope below the shaded face stays in shadow
-        float t = smoothstep(baseY, baseY + (leftMesa ? 60.0 : 70.0), p.y);
+        float t = smoothstep(baseY, baseY + (leftMesa ? 60.0 : 95.0), p.y);
         float side = smoothstep(split - 10.0, split + 25.0, p.x);
         c = mix(c, c * 0.3, (1.0 - t) * side);
       }
