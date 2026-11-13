@@ -1,0 +1,3 @@
+| Shot | Ref | Shows | Camera | Take from it | Watch for |
+|---|---|---|---|---|---|
+| S01 | R01 | hooded figure from behind on a stepped stone outcrop, red plain to a blue horizon, mesa left (top y~655) and larger mesa right (top y~475), black sky with faint stars, dark blue clouds at left and right edges, a thin grey line at y~130 | fixed, 2000x1333, eye level slightly above plain, horizon y~915 | silhouettes, black sky, saturated red (approx 170,20,15), cold blue lit cliff faces vs brown shadow faces, painterly stone slabs | figure edge light, rocks scattered in plain, blue streaks on the plain near the horizon, faint stars |
